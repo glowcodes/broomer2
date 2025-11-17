@@ -235,6 +235,8 @@ const Index = () => {
   };
 
   const filteredData = useMemo(() => {
+    if (activeTab === 'all') return data;
+    
     switch (activeTab) {
       case 'valid':
         return data.filter(row => row.status === 'valid');

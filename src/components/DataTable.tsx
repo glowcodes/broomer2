@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Trash2, AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Trash2, AlertCircle, CheckCircle, AlertTriangle, Wand2 } from 'lucide-react';
 import { autoFixPhoneNumber } from '@/utils/phoneValidation';
 
 interface DataTableProps {
@@ -73,11 +73,21 @@ export const DataTable = ({ data, onUpdateRow, onDeleteRow, onAutoFixRow }: Data
             <TableRow key={row.id} className={getRowClassName(row.status)}>
               <TableCell>{getStatusIcon(row.status)}</TableCell>
               <TableCell>
-                <Input
-                  value={row.phoneNumber}
-                  onChange={(e) => onUpdateRow(row.id, 'phoneNumber', e.target.value)}
-                  className="max-w-[200px]"
-                />
+                <div className="space-y-2">
+                  <Input
+                    value={row.phoneNumber}
+                    onChange={(e) => onUpdateRow(row.id, 'phoneNumber', e.target.value)}
+                    className="max-w-[200px]"
+                  />
+                  {row.status === 'invalid' && (() => {
+                    const suggested = autoFixPhoneNumber(row.phoneNumber);
+                    return suggested !== row.phoneNumber && (
+                      <div className="text-xs text-muted-foreground">
+                        Suggested: <span className="font-medium text-foreground">{suggested}</span>
+                      </div>
+                    );
+                  })()}
+                </div>
               </TableCell>
               <TableCell>
                 <Input
@@ -107,22 +117,28 @@ export const DataTable = ({ data, onUpdateRow, onDeleteRow, onAutoFixRow }: Data
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">
-                  {row.status === 'invalid' && (
+                  {row.status === 'invalid' && (() => {
+                    const suggested = autoFixPhoneNumber(row.phoneNumber);
+                    return suggested !== row.phoneNumber && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => onAutoFixRow(row.id)}
+                      >
+                        <Wand2 className="w-3 h-3 mr-1" />
+                        Auto-fix
+                      </Button>
+                    );
+                  })()}
+                  {(row.status === 'invalid' || row.status === 'duplicate') && (
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => onAutoFixRow(row.id)}
+                      onClick={() => onDeleteRow(row.id)}
                     >
-                      Fix
+                      <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDeleteRow(row.id)}
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
                 </div>
               </TableCell>
             </TableRow>
