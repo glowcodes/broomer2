@@ -21,9 +21,15 @@ export function cleanPhoneNumber(phone: string): string {
   if (cleaned.startsWith('254')) {
     cleaned = '+' + cleaned;
   } else if (cleaned.startsWith('0') && cleaned.length === 10) {
+    // Handles 07... and 01...
     cleaned = '+254' + cleaned.substring(1);
   } else if (cleaned.length === 9) {
-    cleaned = '+254' + cleaned;
+    // Could be 7XXXXXXXX or 1XXXXXXXX - add 0 prefix then convert
+    if (cleaned.startsWith('7') || cleaned.startsWith('1')) {
+      cleaned = '+254' + cleaned;
+    } else {
+      cleaned = '+254' + cleaned;
+    }
   }
   
   return cleaned;
@@ -41,9 +47,10 @@ export function validatePhoneNumber(phone: string): { isValid: boolean; errors: 
     errors.push('Must be 13 characters (+254XXXXXXXXX)');
   }
   
-  const startsWithSeven = cleaned.charAt(4) === '7';
-  if (!startsWithSeven) {
-    errors.push('Must start with +2547');
+  // Allow both 7 and 1 after +254
+  const digit = cleaned.charAt(4);
+  if (digit !== '7' && digit !== '1') {
+    errors.push('Must start with +2547 or +2541');
   }
   
   return {
@@ -80,10 +87,15 @@ export function autoFixPhoneNumber(phone: string): string {
   if (cleaned.startsWith('254')) {
     return '+' + cleaned;
   } else if (cleaned.startsWith('0') && cleaned.length === 10) {
+    // Handles 07... and 01...
     return '+254' + cleaned.substring(1);
   } else if (cleaned.length === 9) {
+    // 7XXXXXXXX or 1XXXXXXXX - add 0 prefix
+    if (cleaned.startsWith('7') || cleaned.startsWith('1')) {
+      return '+254' + cleaned;
+    }
     return '+254' + cleaned;
-  } else if (cleaned.startsWith('7') && cleaned.length === 9) {
+  } else if ((cleaned.startsWith('7') || cleaned.startsWith('1')) && cleaned.length === 9) {
     return '+254' + cleaned;
   }
   
