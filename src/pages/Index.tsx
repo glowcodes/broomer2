@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { CSVRow, ValidationStats } from '@/types/csv';
 import { validatePhoneNumber, cleanPhoneNumber, detectTelco, autoFixPhoneNumber } from '@/utils/phoneValidation';
-import { FileSpreadsheet, Download, CheckCircle, AlertCircle, AlertTriangle, Users } from 'lucide-react';
+import { FileSpreadsheet, Download, CheckCircle, AlertCircle, AlertTriangle, Users, Wand2 } from 'lucide-react';
 
 const Index = () => {
   const [data, setData] = useState<CSVRow[]>([]);
@@ -166,6 +166,38 @@ const Index = () => {
     );
   };
 
+  const handleBatchAutoFix = () => {
+    let fixedCount = 0;
+    let successfulFixes = 0;
+    
+    setData(prevData => 
+      prevData.map(row => {
+        if (row.status !== 'invalid') return row;
+        
+        fixedCount++;
+        const fixed = autoFixPhoneNumber(row.phoneNumber);
+        const validation = validatePhoneNumber(fixed);
+        const telco = detectTelco(fixed);
+        
+        const wasFixed = validation.isValid;
+        if (wasFixed) successfulFixes++;
+        
+        return {
+          ...row,
+          phoneNumber: fixed,
+          telco,
+          status: validation.isValid ? 'valid' : 'invalid',
+          errors: validation.errors
+        };
+      })
+    );
+
+    toast({
+      title: 'Batch Auto-Fix Complete',
+      description: `Successfully fixed ${successfulFixes} out of ${fixedCount} invalid records`,
+    });
+  };
+
   const handleExport = () => {
     const validData = data.filter(row => row.status === 'valid');
     
@@ -258,6 +290,16 @@ const Index = () => {
                 >
                   Upload New File
                 </Button>
+                {stats.invalid > 0 && (
+                  <Button
+                    variant="secondary"
+                    onClick={handleBatchAutoFix}
+                    className="flex items-center gap-2"
+                  >
+                    <Wand2 className="w-4 h-4" />
+                    Auto-Fix All ({stats.invalid})
+                  </Button>
+                )}
                 <Button onClick={handleExport} className="flex items-center gap-2">
                   <Download className="w-4 h-4" />
                   Export Clean Data
