@@ -4,6 +4,7 @@ import { FileUpload } from '@/components/FileUpload';
 import { DataTable } from '@/components/DataTable';
 import { StatCard } from '@/components/StatCard';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { CSVRow, ValidationStats } from '@/types/csv';
 import { validatePhoneNumber, cleanPhoneNumber, detectTelco, autoFixPhoneNumber } from '@/utils/phoneValidation';
@@ -12,6 +13,7 @@ import { FileSpreadsheet, Download, CheckCircle, AlertCircle, AlertTriangle, Use
 const Index = () => {
   const [data, setData] = useState<CSVRow[]>([]);
   const [fileName, setFileName] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<string>('all');
   const { toast } = useToast();
 
   const stats: ValidationStats = useMemo(() => {
@@ -232,6 +234,19 @@ const Index = () => {
     });
   };
 
+  const filteredData = useMemo(() => {
+    switch (activeTab) {
+      case 'valid':
+        return data.filter(row => row.status === 'valid');
+      case 'invalid':
+        return data.filter(row => row.status === 'invalid');
+      case 'duplicates':
+        return data.filter(row => row.status === 'duplicate');
+      default:
+        return data;
+    }
+  }, [data, activeTab]);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -307,12 +322,59 @@ const Index = () => {
               </div>
             </div>
 
-            <DataTable
-              data={data}
-              onUpdateRow={handleUpdateRow}
-              onDeleteRow={handleDeleteRow}
-              onAutoFixRow={handleAutoFixRow}
-            />
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-4">
+                <TabsTrigger value="all" className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  All ({stats.total})
+                </TabsTrigger>
+                <TabsTrigger value="valid" className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  Valid ({stats.valid})
+                </TabsTrigger>
+                <TabsTrigger value="invalid" className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  Invalid ({stats.invalid})
+                </TabsTrigger>
+                <TabsTrigger value="duplicates" className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  Duplicates ({stats.duplicates})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all">
+                <DataTable
+                  data={filteredData}
+                  onUpdateRow={handleUpdateRow}
+                  onDeleteRow={handleDeleteRow}
+                  onAutoFixRow={handleAutoFixRow}
+                />
+              </TabsContent>
+              <TabsContent value="valid">
+                <DataTable
+                  data={filteredData}
+                  onUpdateRow={handleUpdateRow}
+                  onDeleteRow={handleDeleteRow}
+                  onAutoFixRow={handleAutoFixRow}
+                />
+              </TabsContent>
+              <TabsContent value="invalid">
+                <DataTable
+                  data={filteredData}
+                  onUpdateRow={handleUpdateRow}
+                  onDeleteRow={handleDeleteRow}
+                  onAutoFixRow={handleAutoFixRow}
+                />
+              </TabsContent>
+              <TabsContent value="duplicates">
+                <DataTable
+                  data={filteredData}
+                  onUpdateRow={handleUpdateRow}
+                  onDeleteRow={handleDeleteRow}
+                  onAutoFixRow={handleAutoFixRow}
+                />
+              </TabsContent>
+            </Tabs>
           </>
         )}
       </div>
