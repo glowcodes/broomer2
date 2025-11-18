@@ -3,17 +3,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Trash2, AlertCircle, CheckCircle, AlertTriangle, Wand2 } from 'lucide-react';
 import { autoFixPhoneNumber } from '@/utils/phoneValidation';
 
 interface DataTableProps {
   data: CSVRow[];
+  selectedRows: string[];
   onUpdateRow: (id: string, field: keyof CSVRow, value: string) => void;
   onDeleteRow: (id: string) => void;
   onAutoFixRow: (id: string) => void;
+  onToggleRow: (id: string) => void;
+  onToggleAll: () => void;
 }
 
-export const DataTable = ({ data, onUpdateRow, onDeleteRow, onAutoFixRow }: DataTableProps) => {
+export const DataTable = ({ data, selectedRows, onUpdateRow, onDeleteRow, onAutoFixRow, onToggleRow, onToggleAll }: DataTableProps) => {
   const getStatusIcon = (status: CSVRow['status']) => {
     switch (status) {
       case 'valid':
@@ -55,11 +59,22 @@ export const DataTable = ({ data, onUpdateRow, onDeleteRow, onAutoFixRow }: Data
     }
   };
 
+  const allRowsSelected = data.length > 0 && selectedRows.length === data.length;
+  const someRowsSelected = selectedRows.length > 0 && !allRowsSelected;
+
   return (
     <div className="rounded-lg border border-border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12">
+              <Checkbox
+                checked={allRowsSelected}
+                onCheckedChange={onToggleAll}
+                aria-label="Select all rows"
+                className={someRowsSelected ? "data-[state=checked]:bg-primary/50" : ""}
+              />
+            </TableHead>
             <TableHead className="w-12">Status</TableHead>
             <TableHead>Phone Number</TableHead>
             <TableHead>Bundle Size</TableHead>
@@ -71,6 +86,13 @@ export const DataTable = ({ data, onUpdateRow, onDeleteRow, onAutoFixRow }: Data
         <TableBody>
           {data.map((row) => (
             <TableRow key={row.id} className={getRowClassName(row.status)}>
+              <TableCell>
+                <Checkbox
+                  checked={selectedRows.includes(row.id)}
+                  onCheckedChange={() => onToggleRow(row.id)}
+                  aria-label={`Select row ${row.id}`}
+                />
+              </TableCell>
               <TableCell>{getStatusIcon(row.status)}</TableCell>
               <TableCell>
                 <div className="space-y-2">
