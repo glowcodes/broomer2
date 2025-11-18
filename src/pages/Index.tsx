@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { CSVRow, ValidationStats } from '@/types/csv';
 import { validatePhoneNumber, cleanPhoneNumber, detectTelco, autoFixPhoneNumber } from '@/utils/phoneValidation';
-import { FileSpreadsheet, Download, CheckCircle, AlertCircle, AlertTriangle, Users, Wand2, Search, Filter } from 'lucide-react';
+import { FileSpreadsheet, Download, CheckCircle, AlertCircle, AlertTriangle, Users, Wand2, Search, Filter, Trash2 } from 'lucide-react';
 
 const Index = () => {
   const [data, setData] = useState<CSVRow[]>([]);
@@ -19,6 +19,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedTelco, setSelectedTelco] = useState<string>('all');
   const [selectedBundleSize, setSelectedBundleSize] = useState<string>('all');
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const { toast } = useToast();
 
   const stats: ValidationStats = useMemo(() => {
@@ -203,6 +204,58 @@ const Index = () => {
       title: 'Batch Auto-Fix Complete',
       description: `Successfully fixed ${successfulFixes} out of ${fixedCount} invalid records`,
     });
+  };
+
+  const handleToggleRow = (id: string) => {
+    setSelectedRows(prev =>
+      prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+    );
+  };
+
+  const handleToggleAll = () => {
+    if (selectedRows.length === filteredData.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(filteredData.map(row => row.id));
+    }
+  };
+
+  const handleBatchDelete = () => {
+    setData(prevData => prevData.filter(row => !selectedRows.includes(row.id)));
+    toast({
+      title: "Rows deleted",
+      description: `${selectedRows.length} row(s) have been deleted.`,
+    });
+    setSelectedRows([]);
+  };
+
+  const handleBatchAutoFixSelected = () => {
+    let fixedCount = 0;
+    setData(prevData =>
+      prevData.map(row => {
+        if (selectedRows.includes(row.id) && row.status === 'invalid') {
+          const fixed = autoFixPhoneNumber(row.phoneNumber);
+          if (fixed !== row.phoneNumber) {
+            fixedCount++;
+            const telco = detectTelco(fixed);
+            const validation = validatePhoneNumber(fixed);
+            return {
+              ...row,
+              phoneNumber: fixed,
+              telco,
+              status: validation.isValid ? 'valid' : 'invalid',
+              errors: validation.errors
+            };
+          }
+        }
+        return row;
+      })
+    );
+    toast({
+      title: "Batch auto-fix complete",
+      description: `${fixedCount} phone number(s) have been corrected.`,
+    });
+    setSelectedRows([]);
   };
 
   const handleExport = () => {
@@ -402,6 +455,36 @@ const Index = () => {
               </div>
             </div>
 
+            {selectedRows.length > 0 && (
+              <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border border-border mb-6">
+                <span className="text-sm font-medium">
+                  {selectedRows.length} row(s) selected
+                </span>
+                <div className="flex gap-2 ml-auto">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBatchAutoFixSelected}
+                    disabled={!selectedRows.some(id => {
+                      const row = data.find(r => r.id === id);
+                      return row && row.status === 'invalid';
+                    })}
+                  >
+                    <Wand2 className="w-4 h-4 mr-1" />
+                    Auto-fix Selected
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBatchDelete}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete Selected
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4">
                 <TabsTrigger value="all" className="flex items-center gap-2">
@@ -425,33 +508,45 @@ const Index = () => {
               <TabsContent value="all">
                 <DataTable
                   data={filteredData}
+                  selectedRows={selectedRows}
                   onUpdateRow={handleUpdateRow}
                   onDeleteRow={handleDeleteRow}
                   onAutoFixRow={handleAutoFixRow}
+                  onToggleRow={handleToggleRow}
+                  onToggleAll={handleToggleAll}
                 />
               </TabsContent>
               <TabsContent value="valid">
                 <DataTable
                   data={filteredData}
+                  selectedRows={selectedRows}
                   onUpdateRow={handleUpdateRow}
                   onDeleteRow={handleDeleteRow}
                   onAutoFixRow={handleAutoFixRow}
+                  onToggleRow={handleToggleRow}
+                  onToggleAll={handleToggleAll}
                 />
               </TabsContent>
               <TabsContent value="invalid">
                 <DataTable
                   data={filteredData}
+                  selectedRows={selectedRows}
                   onUpdateRow={handleUpdateRow}
                   onDeleteRow={handleDeleteRow}
                   onAutoFixRow={handleAutoFixRow}
+                  onToggleRow={handleToggleRow}
+                  onToggleAll={handleToggleAll}
                 />
               </TabsContent>
               <TabsContent value="duplicates">
                 <DataTable
                   data={filteredData}
+                  selectedRows={selectedRows}
                   onUpdateRow={handleUpdateRow}
                   onDeleteRow={handleDeleteRow}
                   onAutoFixRow={handleAutoFixRow}
+                  onToggleRow={handleToggleRow}
+                  onToggleAll={handleToggleAll}
                 />
               </TabsContent>
             </Tabs>
