@@ -5,15 +5,20 @@ import { DataTable } from '@/components/DataTable';
 import { StatCard } from '@/components/StatCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { CSVRow, ValidationStats } from '@/types/csv';
 import { validatePhoneNumber, cleanPhoneNumber, detectTelco, autoFixPhoneNumber } from '@/utils/phoneValidation';
-import { FileSpreadsheet, Download, CheckCircle, AlertCircle, AlertTriangle, Users, Wand2 } from 'lucide-react';
+import { FileSpreadsheet, Download, CheckCircle, AlertCircle, AlertTriangle, Users, Wand2, Search, Filter } from 'lucide-react';
 
 const Index = () => {
   const [data, setData] = useState<CSVRow[]>([]);
   const [fileName, setFileName] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedTelco, setSelectedTelco] = useState<string>('all');
+  const [selectedBundleSize, setSelectedBundleSize] = useState<string>('all');
   const { toast } = useToast();
 
   const stats: ValidationStats = useMemo(() => {
@@ -201,19 +206,19 @@ const Index = () => {
   };
 
   const handleExport = () => {
-    const validData = data.filter(row => row.status === 'valid');
+    const validFilteredData = filteredData.filter(row => row.status === 'valid');
     
-    if (validData.length === 0) {
+    if (validFilteredData.length === 0) {
       toast({
         title: 'No valid data to export',
-        description: 'Please fix validation errors first',
+        description: 'Please fix validation errors or adjust filters',
         variant: 'destructive'
       });
       return;
     }
 
     const csvContent = Papa.unparse(
-      validData.map(row => ({
+      validFilteredData.map(row => ({
         phoneNumber: row.phoneNumber,
         bundleSize: row.bundleSize,
         telco: row.telco
@@ -230,24 +235,57 @@ const Index = () => {
 
     toast({
       title: 'Export successful',
-      description: `Exported ${validData.length} valid records`
+      description: `Exported ${validFilteredData.length} valid records`
     });
   };
 
+  const uniqueTelcos = useMemo(() => {
+    const telcos = new Set(data.map(row => row.telco).filter(Boolean));
+    return Array.from(telcos).sort();
+  }, [data]);
+
+  const uniqueBundleSizes = useMemo(() => {
+    const sizes = new Set(data.map(row => row.bundleSize).filter(Boolean));
+    return Array.from(sizes).sort((a, b) => parseFloat(a) - parseFloat(b));
+  }, [data]);
+
   const filteredData = useMemo(() => {
-    if (activeTab === 'all') return data;
-    
-    switch (activeTab) {
-      case 'valid':
-        return data.filter(row => row.status === 'valid');
-      case 'invalid':
-        return data.filter(row => row.status === 'invalid');
-      case 'duplicates':
-        return data.filter(row => row.status === 'duplicate');
-      default:
-        return data;
+    let filtered = data;
+
+    // Filter by tab
+    if (activeTab !== 'all') {
+      switch (activeTab) {
+        case 'valid':
+          filtered = filtered.filter(row => row.status === 'valid');
+          break;
+        case 'invalid':
+          filtered = filtered.filter(row => row.status === 'invalid');
+          break;
+        case 'duplicates':
+          filtered = filtered.filter(row => row.status === 'duplicate');
+          break;
+      }
     }
-  }, [data, activeTab]);
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(row => 
+        row.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by telco
+    if (selectedTelco !== 'all') {
+      filtered = filtered.filter(row => row.telco === selectedTelco);
+    }
+
+    // Filter by bundle size
+    if (selectedBundleSize !== 'all') {
+      filtered = filtered.filter(row => row.bundleSize === selectedBundleSize);
+    }
+
+    return filtered;
+  }, [data, activeTab, searchTerm, selectedTelco, selectedBundleSize]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -321,6 +359,46 @@ const Index = () => {
                   <Download className="w-4 h-4" />
                   Export Clean Data
                 </Button>
+              </div>
+            </div>
+
+            <div className="mb-6 p-4 rounded-lg border border-border bg-card">
+              <div className="flex items-center gap-2 mb-3">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium text-foreground">Search & Filters</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search phone numbers..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select value={selectedTelco} onValueChange={setSelectedTelco}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by Telco" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Telcos</SelectItem>
+                    {uniqueTelcos.map(telco => (
+                      <SelectItem key={telco} value={telco}>{telco}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedBundleSize} onValueChange={setSelectedBundleSize}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by Bundle Size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Bundle Sizes</SelectItem>
+                    {uniqueBundleSizes.map(size => (
+                      <SelectItem key={size} value={size}>{size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
