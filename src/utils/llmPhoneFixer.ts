@@ -1,7 +1,8 @@
 export async function getLLMPhoneSuggestion(
-  phoneNumber: string,
-  apiKey: string
+  phoneNumber: string
 ): Promise<string | null> {
+  const apiKey= import.meta.env.OPENAI_API_KEY
+  console.log(apiKey)
   const prompt = `
 You are an expert Kenyan phone number correction engine.
 You will be given a raw phone number that may contain human errors.

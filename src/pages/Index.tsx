@@ -64,14 +64,6 @@ const Index = () => {
   }, [data]);
 
   const handleGetLLMSuggestions = async () => {
-    if (!apiKey) {
-      toast({
-        title: 'API Key Required',
-        description: 'Please provide your OpenAI API key first',
-        variant: 'destructive'
-      });
-      return;
-    }
 
     setIsLoadingLLM(true);
     const updatedData = [...data];
@@ -80,7 +72,7 @@ const Index = () => {
     for (let i = 0; i < updatedData.length; i++) {
       const row = updatedData[i];
       if (row.status === 'invalid') {
-        const suggestion = await getLLMPhoneSuggestion(row.phoneNumber, apiKey);
+        const suggestion = await getLLMPhoneSuggestion(row.phoneNumber);
         if (suggestion) {
           updatedData[i] = { ...row, llmSuggestion: suggestion };
           suggestionsCount++;
@@ -381,7 +373,7 @@ const Index = () => {
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            Smart CSV Data Cleaner
+            BROOM - Mobile Data Cleaner
           </h1>
           <p className="text-muted-foreground">
             Upload, validate, and clean your customer data with ease
@@ -451,7 +443,7 @@ const Index = () => {
               </div>
             </div>
 
-            {/* LLM API Key Section */}
+            {/* LLM API Key Section 
             <div className="mb-6 p-4 border border-border rounded-lg bg-card">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2">
@@ -460,20 +452,6 @@ const Index = () => {
                 </div>
                 <div className="flex gap-3 items-start">
                   <div className="flex-1">
-                    <Input
-                      id="api-key"
-                      type="password"
-                      placeholder="sk-..."
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      className="w-full"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Your API key is stored in memory only and never saved. Get one at{' '}
-                      <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">
-                        platform.openai.com
-                      </a>
-                    </p>
                   </div>
                   <Button
                     onClick={handleGetLLMSuggestions}
@@ -486,6 +464,7 @@ const Index = () => {
                 </div>
               </div>
             </div>
+            */}
 
             <div className="mb-6 p-4 rounded-lg border border-border bg-card">
               <div className="flex items-center gap-2 mb-3">
