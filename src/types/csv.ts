@@ -8,6 +8,7 @@ export interface CSVRow {
   status: ValidationStatus;
   errors: string[];
   originalData: Record<string, any>;
+  llmSuggestion?: string;
 }
 
 export interface ValidationStats {

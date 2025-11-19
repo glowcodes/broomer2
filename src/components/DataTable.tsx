@@ -77,6 +77,7 @@ export const DataTable = ({ data, selectedRows, onUpdateRow, onDeleteRow, onAuto
             </TableHead>
             <TableHead className="w-12">Status</TableHead>
             <TableHead>Phone Number</TableHead>
+            <TableHead>Suggested AutoFix</TableHead>
             <TableHead>Bundle Size</TableHead>
             <TableHead>Telco</TableHead>
             <TableHead>Issues</TableHead>
@@ -110,6 +111,23 @@ export const DataTable = ({ data, selectedRows, onUpdateRow, onDeleteRow, onAuto
                     );
                   })()}
                 </div>
+              </TableCell>
+              <TableCell>
+                {row.status === 'invalid' && row.llmSuggestion && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-mono text-success">
+                      {row.llmSuggestion}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onUpdateRow(row.id, 'phoneNumber', row.llmSuggestion!)}
+                      className="shrink-0"
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                )}
               </TableCell>
               <TableCell>
                 <Input
