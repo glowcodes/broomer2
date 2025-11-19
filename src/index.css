@@ -38,6 +38,15 @@ All colors MUST be HSL.
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
+    --safaricom: 145 70% 35%;
+    --safaricom-foreground: 0 0% 100%;
+
+    --airtel: 0 85% 55%;
+    --airtel-foreground: 0 0% 100%;
+
+    --telkom: 210 90% 50%;
+    --telkom-foreground: 0 0% 100%;
+
     --border: 214 20% 88%;
     --input: 214 20% 88%;
     --ring: 200 95% 42%;
@@ -95,6 +104,15 @@ All colors MUST be HSL.
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
+
+    --safaricom: 145 70% 35%;
+    --safaricom-foreground: 0 0% 100%;
+
+    --airtel: 0 85% 55%;
+    --airtel-foreground: 0 0% 100%;
+
+    --telkom: 210 90% 50%;
+    --telkom-foreground: 0 0% 100%;
 
     --border: 215 20% 22%;
     --input: 215 20% 22%;

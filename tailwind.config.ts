@@ -39,6 +39,18 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        safaricom: {
+          DEFAULT: "hsl(var(--safaricom))",
+          foreground: "hsl(var(--safaricom-foreground))",
+        },
+        airtel: {
+          DEFAULT: "hsl(var(--airtel))",
+          foreground: "hsl(var(--airtel-foreground))",
+        },
+        telkom: {
+          DEFAULT: "hsl(var(--telkom))",
+          foreground: "hsl(var(--telkom-foreground))",
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
