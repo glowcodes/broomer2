@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CSVRow, ValidationStats } from '@/types/csv';
 import { validatePhoneNumber, cleanPhoneNumber, detectTelco, autoFixPhoneNumber } from '@/utils/phoneValidation';
 import { FileSpreadsheet, Download, CheckCircle, AlertCircle, AlertTriangle, Users, Wand2, Search, Filter, Trash2 } from 'lucide-react';
+import { getLLMPhoneSuggestion } from '@/utils/llmPhoneFixer';
 
 const Index = () => {
   const [data, setData] = useState<CSVRow[]>([]);
@@ -20,6 +21,8 @@ const Index = () => {
   const [selectedTelco, setSelectedTelco] = useState<string>('all');
   const [selectedBundleSize, setSelectedBundleSize] = useState<string>('all');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [apiKey, setApiKey] = useState<string>('');
+  const [isLoadingLLM, setIsLoadingLLM] = useState(false);
   const { toast } = useToast();
 
   const stats: ValidationStats = useMemo(() => {
@@ -59,6 +62,39 @@ const Index = () => {
     result.duplicates = duplicateCount;
     return result;
   }, [data]);
+
+  const handleGetLLMSuggestions = async () => {
+    if (!apiKey) {
+      toast({
+        title: 'API Key Required',
+        description: 'Please provide your OpenAI API key first',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsLoadingLLM(true);
+    const updatedData = [...data];
+    let suggestionsCount = 0;
+
+    for (let i = 0; i < updatedData.length; i++) {
+      const row = updatedData[i];
+      if (row.status === 'invalid') {
+        const suggestion = await getLLMPhoneSuggestion(row.phoneNumber, apiKey);
+        if (suggestion) {
+          updatedData[i] = { ...row, llmSuggestion: suggestion };
+          suggestionsCount++;
+        }
+      }
+    }
+
+    setData(updatedData);
+    setIsLoadingLLM(false);
+    toast({
+      title: 'Suggestions Generated',
+      description: `Generated ${suggestionsCount} LLM suggestions for invalid phone numbers`
+    });
+  };
 
   const handleFileSelect = (file: File) => {
     setFileName(file.name);
@@ -412,6 +448,42 @@ const Index = () => {
                   <Download className="w-4 h-4" />
                   Export Clean Data
                 </Button>
+              </div>
+            </div>
+
+            {/* LLM API Key Section */}
+            <div className="mb-6 p-4 border border-border rounded-lg bg-card">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Wand2 className="w-4 h-4 text-muted-foreground" />
+                  <h3 className="text-sm font-medium">LLM-Powered Phone Corrections</h3>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <div className="flex-1">
+                    <Input
+                      id="api-key"
+                      type="password"
+                      placeholder="sk-..."
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Your API key is stored in memory only and never saved. Get one at{' '}
+                      <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">
+                        platform.openai.com
+                      </a>
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleGetLLMSuggestions}
+                    disabled={!apiKey || isLoadingLLM || stats.invalid === 0}
+                    variant="secondary"
+                    className="shrink-0"
+                  >
+                    {isLoadingLLM ? 'Generating...' : `Get LLM Suggestions${stats.invalid > 0 ? ` (${stats.invalid})` : ''}`}
+                  </Button>
+                </div>
               </div>
             </div>
 
