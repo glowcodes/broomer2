@@ -46,16 +46,16 @@ export const DataTable = ({ data, selectedRows, onUpdateRow, onDeleteRow, onAuto
     }
   };
 
-  const getTelcoBadgeVariant = (telco?: string) => {
+  const getTelcoBadgeClassName = (telco?: string) => {
     switch (telco) {
       case 'Safaricom':
-        return 'default';
+        return 'bg-safaricom text-safaricom-foreground hover:bg-safaricom/90';
       case 'Airtel':
-        return 'secondary';
+        return 'bg-airtel text-airtel-foreground hover:bg-airtel/90';
       case 'Telkom':
-        return 'outline';
+        return 'bg-telkom text-telkom-foreground hover:bg-telkom/90';
       default:
-        return 'outline';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -138,7 +138,7 @@ export const DataTable = ({ data, selectedRows, onUpdateRow, onDeleteRow, onAuto
               </TableCell>
               <TableCell>
                 {row.telco && row.telco !== 'Unknown' && (
-                  <Badge variant={getTelcoBadgeVariant(row.telco) as any}>
+                  <Badge className={getTelcoBadgeClassName(row.telco)}>
                     {row.telco}
                   </Badge>
                 )}
