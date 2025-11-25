@@ -18,7 +18,11 @@ cd broomer2
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Format dataset.
+a. Use the csv file provided in the code('src/data/sampleDataset.csv') as the dataset to be uploaded in the homepage
+b. Alternatively, in the event you want to upload a new dataset,  edit the Phone Number and Data/Bundles columns to read phoneNumber and bundleSize respectively. 
+
+# Step 5: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
